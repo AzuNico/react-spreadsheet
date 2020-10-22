@@ -1,8 +1,13 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { useForm } from "../../hooks/useForm";
 
 export const Cells = ({ x, y, value }) => {
   const initialState = { selected: false, editing: false };
   const [state, setState] = useState(initialState);
+
+  const [inputValue, handleInputChage] = useForm({ cellValue: "" });
+
+  const { cellValue } = inputValue;
 
   const handleUnselectAll = useCallback(() => {
     if (state.selected || state.editing) {
@@ -25,9 +30,31 @@ export const Cells = ({ x, y, value }) => {
     window.document.dispatchEvent(unselectAllEvent);
   };
 
-  const handleClick = () => {
+  let timer = 0;
+  let delay = 200;
+  let prevent = false;
+
+  const doClickAction = () => {
     emitUnselectAllEvent();
     setState({ ...state, selected: true });
+  };
+  const doDoubleClickAction = () => {
+    setState({ ...state, editing: true });
+  };
+
+  const handleDoubleClick = () => {
+    clearTimeout(timer);
+    prevent = true;
+    doDoubleClickAction();
+  };
+
+  const handleClick = () => {
+    timer = setTimeout(function () {
+      if (!prevent) {
+        doClickAction();
+      }
+      prevent = false;
+    }, delay);
   };
 
   const handleBlur = () => {
@@ -64,6 +91,7 @@ export const Cells = ({ x, y, value }) => {
   };
 
   const css = calculateCss();
+
   if (x === 0) {
     if (y === 0) {
       return <span style={css} />;
@@ -74,10 +102,21 @@ export const Cells = ({ x, y, value }) => {
     const alpha = "0ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     return <span style={css}>{alpha[x]}</span>;
   }
-
-  return (
-    <span onClick={handleClick} style={css}>
-      {JSON.stringify(state.selected)}
-    </span>
-  );
+  if (state.editing) {
+    return (
+      <input
+        name="cellValue"
+        value={cellValue}
+        autoFocus
+        onChange={handleInputChage}
+        style={css}
+      />
+    );
+  } else {
+    return (
+      <span onClick={handleClick} onDoubleClick={handleDoubleClick} style={css}>
+        {cellValue}
+      </span>
+    );
+  }
 };
