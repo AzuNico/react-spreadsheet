@@ -105,6 +105,7 @@ export const Cells = ({ x, y, value }) => {
   if (state.editing) {
     return (
       <input
+        onBlur={handleBlur}
         name="cellValue"
         value={cellValue}
         autoFocus
